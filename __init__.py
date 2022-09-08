@@ -8,22 +8,24 @@ bl_info = {
     "category": "Import-Export",
 }
 
+from email.policy import default
+from pydoc import describe
 import bpy
 import json
 
-def read_json_data(context, filepath, use_some_setting):
+def read_json_data(context, filepath, data_array_name):
     print("importing data from json...")
     f = open(filepath, 'r', encoding='utf-8-sig')
     data = json.load(f)
     
-    kandidierende = data['kandidierende']
+    data_array = data[data_array_name]
     
     # name of the object and mesh
     data_name = "imported_data"
     
     mesh = bpy.data.meshes.new(name=data_name)
-    mesh.vertices.add(len(kandidierende))
-    #coordinates = np.ones((len(kandidierende)*3))
+    mesh.vertices.add(len(data_array))
+    #coordinates = np.ones((len(data_array)*3))
     #mesh.vertices.foreach_set("co", coordinates)
     
     # add custom data
@@ -32,7 +34,7 @@ def read_json_data(context, filepath, use_some_setting):
 
     # set data according to json
     i=0
-    for k in kandidierende:
+    for k in data_array:
         mesh.attributes['weiblich'].data[i].value = k['geschlecht'] == 'F'
         mesh.attributes['kanton'].data[i].value = k['kanton_nummer']
         mesh.vertices[i].co = (i,0.0,0.0) # set vertex x position according to index
@@ -74,6 +76,12 @@ class ImportJsonData(Operator, ImportHelper):
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
 
+    array_name: StringProperty(
+        name="Array name",
+        description="The name of the array to import",
+        default="",
+    )
+
     # List of operator properties, the attributes will be assigned
     # to the class instance from the operator settings before calling.
     use_setting: BoolProperty(
@@ -93,7 +101,7 @@ class ImportJsonData(Operator, ImportHelper):
     )
 
     def execute(self, context):
-        return read_json_data(context, self.filepath, self.use_setting)
+        return read_json_data(context, self.filepath, self.array_name)
 
 
 
