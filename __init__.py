@@ -61,6 +61,26 @@ from bpy_extras.io_utils import ImportHelper
 from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
 
+# https://blender.stackexchange.com/questions/16511/how-can-i-store-and-retrieve-a-custom-list-in-a-blend-file
+# https://docs.blender.org/api/current/bpy.types.Attribute.html#bpy.types.Attribute
+# https://docs.blender.org/api/master/bpy_types_enum_items/attribute_domain_items.html?highlight=mesh+attributes
+
+class DataFieldPropertiesGroup(bpy.types.PropertyGroup):
+    fieldName : StringProperty(
+        name="Field name",
+        description="The name of the field to import",
+        default="",
+    )
+    fieldDataType: EnumProperty(
+        name="Data Type Enum",
+        description="Choose Data Type",
+        items=(
+            ('FLOAT', "Float", "Floating-point value"),
+            ('INT', "Integer", "32-bit integer"),
+            ('BOOLEAN', "Boolean", "True or false"),
+        ),
+        default='FLOAT',
+    )
 
 class ImportJsonData(Operator, ImportHelper):
     """Import data from JSON files"""
@@ -90,6 +110,12 @@ class ImportJsonData(Operator, ImportHelper):
         default=True,
     )
 
+    field_names: bpy.props.CollectionProperty(
+        type=DataFieldPropertiesGroup,
+        name="Field names",
+        description="All the fields that should be imported",
+    )
+
     type: EnumProperty(
         name="Example Enum",
         description="Choose between two items",
@@ -111,11 +137,13 @@ def menu_func_import(self, context):
 
 # Register and add to the "file selector" menu (required to use F3 search "Text Import Operator" for quick access)
 def register():
+    bpy.utils.register_class(DataFieldPropertiesGroup)
     bpy.utils.register_class(ImportJsonData)
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
 
 
 def unregister():
+    bpy.utils.unregister_class(DataFieldPropertiesGroup)
     bpy.utils.unregister_class(ImportJsonData)
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
 
