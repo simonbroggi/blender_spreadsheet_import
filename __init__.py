@@ -55,6 +55,14 @@ def read_json_data(context, filepath, data_array_name):
     return {'FINISHED'}
 
 
+class MY_UL_List(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        custom_icon = 'OBJECT_DATAMODE'
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+            layout.label(text=item.name, icon = custom_icon)
+        elif self.layout_type in {'GRID'}:
+            layout.alignment = 'CENTER'
+            layout.label(text="", icon = custom_icon)
 
 
 # https://blender.stackexchange.com/questions/16511/how-can-i-store-and-retrieve-a-custom-list-in-a-blend-file
@@ -113,6 +121,11 @@ class ImportJsonData(bpy.types.Operator, ImportHelper):
         description="All the fields that should be imported",
     )
 
+    field_name_index: bpy.props.IntProperty(
+        name="Index of field_names",
+        default=0,
+    )
+
     type: bpy.props.EnumProperty(
         name="Example Enum",
         description="Choose between two items",
@@ -157,10 +170,16 @@ class JSON_PT_imort_options(bpy.types.Panel):
         sfile = context.space_data
         operator = sfile.active_operator
         layout = self.layout
+
         #layout.template_list("UI_UL_list", "", operator, "field_names", operator, )
         
+        # success with this tutorial!
+        # https://sinestesia.co/blog/tutorials/using-uilists-in-blender/
 
-        layout.operator(IMPORT_OT_filed_add.bl_idname)
+        row = layout.row()
+        row.template_list("MY_UL_List", "", operator, "field_names", operator, "field_name_index")
+
+        layout.row().operator(IMPORT_OT_filed_add.bl_idname)
 
         # print(operator.field_names)
         pass
@@ -176,6 +195,7 @@ class VIEW3D_PT_import_json(bpy.types.Panel):
         
 
 blender_classes = [
+    MY_UL_List,
     DataFieldPropertiesGroup,
     ImportJsonData,
     VIEW3D_PT_import_json,
