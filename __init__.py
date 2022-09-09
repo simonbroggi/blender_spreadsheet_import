@@ -129,6 +129,23 @@ class ImportJsonData(Operator, ImportHelper):
     def execute(self, context):
         return read_json_data(context, self.filepath, self.array_name)
 
+class JSON_PT_imort_options(bpy.types.Panel):
+    bl_space_type = 'FILE_BROWSER'
+    bl_region_type = 'TOOL_PROPS'
+    bl_label = "Dataa Import Options"
+    bl_parent_id = "FILE_PT_operator"
+
+    @classmethod
+    def poll(cls, context):
+        sfile = context.space_data
+        operator = sfile.active_operator
+        return operator.bl_idname == "IMPORT_OT_json"
+
+    def draw(self, context):
+        sfile = context.space_data
+        operator = sfile.active_operator
+        # print(operator.field_names)
+        pass
 
 class VIEW3D_PT_import_json(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
@@ -144,6 +161,7 @@ blender_classes = [
     DataFieldPropertiesGroup,
     ImportJsonData,
     VIEW3D_PT_import_json,
+    JSON_PT_imort_options,
 ]
 
 # Only needed if you want to add into a dynamic menu
