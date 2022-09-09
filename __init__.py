@@ -12,6 +12,7 @@ from email.policy import default
 from pydoc import describe
 import bpy
 import json
+import random #todo: remove
 
 def read_json_data(context, filepath, data_array_name):
     print("importing data from json...")
@@ -129,6 +130,21 @@ class ImportJsonData(Operator, ImportHelper):
     def execute(self, context):
         return read_json_data(context, self.filepath, self.array_name)
 
+class IMPORT_OT_filed_add(Operator):
+    bl_idname = "import.json_field_add"
+    bl_label = "Add field"
+
+    def execute(self, context):
+        sfile = context.space_data
+        operator = sfile.active_operator
+        item = operator.field_names.add()
+
+        #todo: dont initialize randomly
+        item.name = random.sample(("foo", "bar", "asdf"), 1)[0]
+        item.fieldDataType = 'INT' if random.random() > 0.5 else 'BOOLEAN'
+        
+        return {'FINISHED'}
+
 class JSON_PT_imort_options(bpy.types.Panel):
     bl_space_type = 'FILE_BROWSER'
     bl_region_type = 'TOOL_PROPS'
@@ -144,6 +160,11 @@ class JSON_PT_imort_options(bpy.types.Panel):
     def draw(self, context):
         sfile = context.space_data
         operator = sfile.active_operator
+        layout = self.layout
+        #layout.template_list("UI_UL_list", "", operator, "field_names", operator, )
+
+        layout.operator(IMPORT_OT_filed_add.bl_idname)
+
         # print(operator.field_names)
         pass
 
@@ -162,6 +183,7 @@ blender_classes = [
     ImportJsonData,
     VIEW3D_PT_import_json,
     JSON_PT_imort_options,
+    IMPORT_OT_filed_add,
 ]
 
 # Only needed if you want to add into a dynamic menu
