@@ -130,6 +130,21 @@ class ImportJsonData(Operator, ImportHelper):
         return read_json_data(context, self.filepath, self.array_name)
 
 
+class VIEW3D_PT_import_json(bpy.types.Panel):
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "Import Json"
+    bl_label = "labllle"
+
+    def draw(self, context):
+        self.layout.operator(ImportJsonData.bl_idname, text="JSON Import Operator")
+        
+
+blender_classes = [
+    DataFieldPropertiesGroup,
+    ImportJsonData,
+    VIEW3D_PT_import_json,
+]
 
 # Only needed if you want to add into a dynamic menu
 def menu_func_import(self, context):
@@ -137,13 +152,13 @@ def menu_func_import(self, context):
 
 # Register and add to the "file selector" menu (required to use F3 search "Text Import Operator" for quick access)
 def register():
-    bpy.utils.register_class(DataFieldPropertiesGroup)
-    bpy.utils.register_class(ImportJsonData)
+    for blender_class in blender_classes:
+        bpy.utils.register_class(blender_class)
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
 
 
 def unregister():
-    bpy.utils.unregister_class(DataFieldPropertiesGroup)
-    bpy.utils.unregister_class(ImportJsonData)
+    for blender_class in blender_classes:
+        bpy.utils.unregister_class(blender_class)
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
 
