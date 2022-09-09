@@ -8,9 +8,8 @@ bl_info = {
     "category": "Import-Export",
 }
 
-from email.policy import default
-from pydoc import describe
 import bpy
+from bpy_extras.io_utils import ImportHelper
 import json
 import random #todo: remove
 
@@ -56,23 +55,19 @@ def read_json_data(context, filepath, data_array_name):
     return {'FINISHED'}
 
 
-# ImportHelper is a helper class, defines filename and
-# invoke() function which calls the file selector.
-from bpy_extras.io_utils import ImportHelper
-from bpy.props import StringProperty, BoolProperty, EnumProperty
-from bpy.types import Operator
+
 
 # https://blender.stackexchange.com/questions/16511/how-can-i-store-and-retrieve-a-custom-list-in-a-blend-file
 # https://docs.blender.org/api/current/bpy.types.Attribute.html#bpy.types.Attribute
 # https://docs.blender.org/api/master/bpy_types_enum_items/attribute_domain_items.html?highlight=mesh+attributes
 
 class DataFieldPropertiesGroup(bpy.types.PropertyGroup):
-    fieldName : StringProperty(
+    fieldName : bpy.props.StringProperty(
         name="Field name",
         description="The name of the field to import",
         default="",
     )
-    fieldDataType: EnumProperty(
+    fieldDataType: bpy.props.EnumProperty(
         name="Data Type Enum",
         description="Choose Data Type",
         items=(
@@ -83,7 +78,8 @@ class DataFieldPropertiesGroup(bpy.types.PropertyGroup):
         default='FLOAT',
     )
 
-class ImportJsonData(Operator, ImportHelper):
+# ImportHelper is a helper class, defines filename and invoke() function which calls the file selector.
+class ImportJsonData(bpy.types.Operator, ImportHelper):
     """Import data from JSON files"""
     bl_idname = "import.json"  # important since its how bpy.ops.import.json is constructed
     bl_label = "Import JSON Data"
@@ -91,13 +87,13 @@ class ImportJsonData(Operator, ImportHelper):
     # ImportHelper mixin class uses this
     filename_ext = ".json"
 
-    filter_glob: StringProperty(
+    filter_glob: bpy.props.StringProperty(
         default="*.json",
         options={'HIDDEN'},
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
 
-    array_name: StringProperty(
+    array_name: bpy.props.StringProperty(
         name="Array name",
         description="The name of the array to import",
         default="",
@@ -105,7 +101,7 @@ class ImportJsonData(Operator, ImportHelper):
 
     # List of operator properties, the attributes will be assigned
     # to the class instance from the operator settings before calling.
-    use_setting: BoolProperty(
+    use_setting: bpy.props.BoolProperty(
         name="Example Boolean",
         description="Example Tooltip",
         default=True,
@@ -117,7 +113,7 @@ class ImportJsonData(Operator, ImportHelper):
         description="All the fields that should be imported",
     )
 
-    type: EnumProperty(
+    type: bpy.props.EnumProperty(
         name="Example Enum",
         description="Choose between two items",
         items=(
@@ -130,7 +126,7 @@ class ImportJsonData(Operator, ImportHelper):
     def execute(self, context):
         return read_json_data(context, self.filepath, self.array_name)
 
-class IMPORT_OT_filed_add(Operator):
+class IMPORT_OT_filed_add(bpy.types.Operator):
     bl_idname = "import.json_field_add"
     bl_label = "Add field"
 
@@ -162,6 +158,7 @@ class JSON_PT_imort_options(bpy.types.Panel):
         operator = sfile.active_operator
         layout = self.layout
         #layout.template_list("UI_UL_list", "", operator, "field_names", operator, )
+        
 
         layout.operator(IMPORT_OT_filed_add.bl_idname)
 
