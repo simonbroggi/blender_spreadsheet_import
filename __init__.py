@@ -148,11 +148,26 @@ class IMPORT_OT_filed_add(bpy.types.Operator):
         operator = sfile.active_operator
         item = operator.field_names.add()
 
+        operator.field_name_index = len(operator.field_names) - 1
+
         #todo: dont initialize randomly
         item.name = random.sample(("foo", "bar", "asdf"), 1)[0]
         item.fieldDataType = 'INT' if random.random() > 0.5 else 'BOOLEAN'
         
         return {'FINISHED'}
+
+class IMPORT_OT_field_remove(bpy.types.Operator):
+    bl_idname = "import.json_field_remove"
+    bl_label = "Remove field"
+
+    def execute(self, context):
+        sfile = context.space_data
+        operator = sfile.active_operator
+        index = operator.field_name_index
+        operator.field_names.remove(index)
+        operator.field_name_index = min(max(0,index - 1), len(operator.field_names)-1)
+        return {'FINISHED'}
+
 
 class JSON_PT_imort_options(bpy.types.Panel):
     bl_space_type = 'FILE_BROWSER'
@@ -176,10 +191,17 @@ class JSON_PT_imort_options(bpy.types.Panel):
         # success with this tutorial!
         # https://sinestesia.co/blog/tutorials/using-uilists-in-blender/
 
-        row = layout.row()
-        row.template_list("MY_UL_List", "", operator, "field_names", operator, "field_name_index")
+        rows = 2
+        filed_names_exist = bool(len(operator.field_names) >= 1)
+        if filed_names_exist:
+            rows = 4
 
-        layout.row().operator(IMPORT_OT_filed_add.bl_idname)
+        row = layout.row()
+        row.template_list("MY_UL_List", "", operator, "field_names", operator, "field_name_index", rows=rows)
+
+        col = row.column(align=True)
+        col.operator(IMPORT_OT_filed_add.bl_idname, icon='ADD', text="")
+        col.operator(IMPORT_OT_field_remove.bl_idname, icon='REMOVE', text="")
 
         # print(operator.field_names)
         pass
@@ -201,6 +223,7 @@ blender_classes = [
     VIEW3D_PT_import_json,
     JSON_PT_imort_options,
     IMPORT_OT_filed_add,
+    IMPORT_OT_field_remove,
 ]
 
 # Only needed if you want to add into a dynamic menu
