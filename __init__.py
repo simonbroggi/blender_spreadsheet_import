@@ -29,6 +29,8 @@ def read_json_data(context, filepath, data_array_name, field_names):
     #coordinates = np.ones((len(data_array)*3))
     #mesh.vertices.foreach_set("co", coordinates)
     
+    # https://docs.blender.org/api/current/bpy.types.Attribute.html#bpy.types.Attribute
+
     # add custom data
     for field_name in field_names:
         mesh.attributes.new(name=field_name.name, type='INT', domain='POINT')
