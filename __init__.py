@@ -13,12 +13,13 @@ from bpy_extras.io_utils import ImportHelper
 import json
 import random #todo: remove
 
-def read_json_data(context, filepath, data_array_name):
+def read_json_data(context, filepath, data_array_name, field_names):
     print("importing data from json...")
     f = open(filepath, 'r', encoding='utf-8-sig')
     data = json.load(f)
     
-    data_array = data[data_array_name]
+    #todo: doain per data array.
+    data_array = data[data_array_name] 
     
     # name of the object and mesh
     data_name = "imported_data"
@@ -29,14 +30,18 @@ def read_json_data(context, filepath, data_array_name):
     #mesh.vertices.foreach_set("co", coordinates)
     
     # add custom data
-    mesh.attributes.new(name='weiblich', type='BOOLEAN', domain='POINT')
-    mesh.attributes.new(name='kanton', type='INT', domain='POINT')
+    for field_name in field_names:
+        mesh.attributes.new(name=field_name.name, type='INT', domain='POINT')
+    # mesh.attributes.new(name='weiblich', type='BOOLEAN', domain='POINT')
+    # mesh.attributes.new(name='kanton', type='INT', domain='POINT')
 
     # set data according to json
     i=0
     for k in data_array:
-        mesh.attributes['weiblich'].data[i].value = k['geschlecht'] == 'F'
-        mesh.attributes['kanton'].data[i].value = k['kanton_nummer']
+        for field_name in field_names:
+            mesh.attributes[field_name.name].data[i].value = k[field_name.name]
+        #mesh.attributes['weiblich'].data[i].value = k['geschlecht'] == 'F'
+        #mesh.attributes['kanton'].data[i].value = k['kanton_nummer']
         mesh.vertices[i].co = (i,0.0,0.0) # set vertex x position according to index
         i=i+1
     
@@ -59,10 +64,12 @@ class MY_UL_List(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         custom_icon = 'OBJECT_DATAMODE'
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
-            layout.label(text=item.name, icon = custom_icon)
+            #layout.label(text=item.name, icon = custom_icon)
+            layout.prop(data=item, property="name")
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
-            layout.label(text="", icon = custom_icon)
+            #layout.label(text="", icon = custom_icon)
+            layout.prop(data=item, property="name")
 
 
 # https://blender.stackexchange.com/questions/16511/how-can-i-store-and-retrieve-a-custom-list-in-a-blend-file
@@ -137,7 +144,7 @@ class ImportJsonData(bpy.types.Operator, ImportHelper):
     )
 
     def execute(self, context):
-        return read_json_data(context, self.filepath, self.array_name)
+        return read_json_data(context, self.filepath, self.array_name, self.field_names)
 
 class IMPORT_OT_filed_add(bpy.types.Operator):
     bl_idname = "import.json_field_add"
