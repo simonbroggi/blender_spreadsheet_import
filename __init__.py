@@ -33,7 +33,7 @@ def read_json_data(context, filepath, data_array_name, field_names):
 
     # add custom data
     for field_name in field_names:
-        mesh.attributes.new(name=field_name.name, type='INT', domain='POINT')
+        mesh.attributes.new(name=field_name.name, type=field_name.dataType, domain='POINT')
     # mesh.attributes.new(name='weiblich', type='BOOLEAN', domain='POINT')
     # mesh.attributes.new(name='kanton', type='INT', domain='POINT')
 
@@ -65,32 +65,38 @@ def read_json_data(context, filepath, data_array_name, field_names):
 class MY_UL_List(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         custom_icon = 'OBJECT_DATAMODE'
+        #item is a DataFieldPropertiesGroup
+        #print(type(item.name))
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             #layout.label(text=item.name, icon = custom_icon)
             layout.prop(data=item, property="name")
+            layout.prop(data=item, property="dataType")
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
             #layout.label(text="", icon = custom_icon)
             layout.prop(data=item, property="name")
+            layout.prop(data=item, property="dataType")
 
 
 # https://blender.stackexchange.com/questions/16511/how-can-i-store-and-retrieve-a-custom-list-in-a-blend-file
-# https://docs.blender.org/api/current/bpy.types.Attribute.html#bpy.types.Attribute
 # https://docs.blender.org/api/master/bpy_types_enum_items/attribute_domain_items.html?highlight=mesh+attributes
 
 class DataFieldPropertiesGroup(bpy.types.PropertyGroup):
-    fieldName : bpy.props.StringProperty(
-        name="Field name",
+    name : bpy.props.StringProperty(
+        name="Field Name",
         description="The name of the field to import",
         default="",
     )
-    fieldDataType: bpy.props.EnumProperty(
-        name="Data Type Enum",
+
+    #  https://docs.blender.org/api/current/bpy.types.Attribute.html#bpy.types.Attribute
+    dataType: bpy.props.EnumProperty(
+        name="Field Data Type",
         description="Choose Data Type",
         items=(
             ('FLOAT', "Float", "Floating-point value"),
             ('INT', "Integer", "32-bit integer"),
             ('BOOLEAN', "Boolean", "True or false"),
+            ('STRING', "String", "Text string"),
         ),
         default='FLOAT',
     )
@@ -161,7 +167,7 @@ class IMPORT_OT_filed_add(bpy.types.Operator):
 
         #todo: dont initialize randomly
         item.name = random.sample(("foo", "bar", "asdf"), 1)[0]
-        item.fieldDataType = 'INT' if random.random() > 0.5 else 'BOOLEAN'
+        item.dataType = 'INT' if random.random() > 0.5 else 'BOOLEAN'
         
         return {'FINISHED'}
 
