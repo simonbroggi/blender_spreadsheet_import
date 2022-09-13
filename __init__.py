@@ -102,7 +102,7 @@ class DataFieldPropertiesGroup(bpy.types.PropertyGroup):
             ('FLOAT', "Float", "Floating-point value"),
             ('INT', "Integer", "32-bit integer"),
             ('BOOLEAN', "Boolean", "True or false"),
-            ('STRING', "String", "Text string"),
+            # ('STRING', "String", "Text string"), # string wont work
         ),
         default='FLOAT',
     )
