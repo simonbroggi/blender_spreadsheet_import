@@ -31,9 +31,13 @@ def read_json_data(context, filepath, data_array_name, field_names):
     
     # https://docs.blender.org/api/current/bpy.types.Attribute.html#bpy.types.Attribute
 
+    # In JSON an empty string is a valid key.
+    # Blender mesh attributes with an empty name string dont work
+    # That's why an empty key in JSON generates an attribute with the name "empty_key_string"
+
     # add custom data
     for field_name in field_names:
-        mesh.attributes.new(name=field_name.name, type=field_name.dataType, domain='POINT')
+        mesh.attributes.new(name=field_name.name if field_name.name else "empty_key_string", type=field_name.dataType, domain='POINT')
     # mesh.attributes.new(name='weiblich', type='BOOLEAN', domain='POINT')
     # mesh.attributes.new(name='kanton', type='INT', domain='POINT')
 
@@ -41,7 +45,7 @@ def read_json_data(context, filepath, data_array_name, field_names):
     i=0
     for k in data_array:
         for field_name in field_names:
-            mesh.attributes[field_name.name].data[i].value = k[field_name.name]
+            mesh.attributes[field_name.name if field_name.name else "empty_key_string"].data[i].value = k[field_name.name]
         #mesh.attributes['weiblich'].data[i].value = k['geschlecht'] == 'F'
         #mesh.attributes['kanton'].data[i].value = k['kanton_nummer']
         mesh.vertices[i].co = (i,0.0,0.0) # set vertex x position according to index
