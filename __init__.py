@@ -50,6 +50,8 @@ def read_json_data(context, filepath, data_array_name, field_names):
         #mesh.attributes['kanton'].data[i].value = k['kanton_nummer']
         mesh.vertices[i].co = (i,0.0,0.0) # set vertex x position according to index
         i=i+1
+
+    #todo: nicer error messages
     
     # Create new object
     for ob in bpy.context.selected_objects:
