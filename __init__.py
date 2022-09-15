@@ -35,8 +35,8 @@ def read_json_data(context, filepath, data_array_name, data_fields):
     # That's why an empty key in JSON generates an attribute with the name "empty_key_string"
 
     # add custom data
-    for field_name in data_fields:
-        mesh.attributes.new(name=field_name.name if field_name.name else "empty_key_string", type=field_name.dataType, domain='POINT')
+    for data_field in data_fields:
+        mesh.attributes.new(name=data_field.name if data_field.name else "empty_key_string", type=data_field.dataType, domain='POINT')
     # mesh.attributes.new(name='weiblich', type='BOOLEAN', domain='POINT')
     # mesh.attributes.new(name='kanton', type='INT', domain='POINT')
 
@@ -45,16 +45,16 @@ def read_json_data(context, filepath, data_array_name, data_fields):
     for k in data_array:
 
         # make sure it's the right data type
-        for field_name in data_fields:
-            value = k[field_name.name]
-            if(field_name.dataType == 'FLOAT'):
+        for data_field in data_fields:
+            value = k[data_field.name]
+            if(data_field.dataType == 'FLOAT'):
                 value = float(value)
-            elif(field_name.dataType == 'INT'):
+            elif(data_field.dataType == 'INT'):
                 value = int(value)
-            elif(field_name.dataType == 'BOOLEAN'):
+            elif(data_field.dataType == 'BOOLEAN'):
                 value = bool(value)
 
-            mesh.attributes[field_name.name if field_name.name else "empty_key_string"].data[i].value = value
+            mesh.attributes[data_field.name if data_field.name else "empty_key_string"].data[i].value = value
         #mesh.attributes['weiblich'].data[i].value = k['geschlecht'] == 'F'
         #mesh.attributes['kanton'].data[i].value = k['kanton_nummer']
         mesh.vertices[i].co = (i,0.0,0.0) # set vertex x position according to index
@@ -152,7 +152,7 @@ class ImportJsonData(bpy.types.Operator, ImportHelper):
     )
 
     # The index of the selected data_field
-    field_name_index: bpy.props.IntProperty(
+    active_data_field_index: bpy.props.IntProperty(
         name="Index of data_fields",
         default=0,
     )
@@ -179,7 +179,7 @@ class IMPORT_OT_filed_add(bpy.types.Operator):
         operator = sfile.active_operator
         item = operator.data_fields.add()
 
-        operator.field_name_index = len(operator.data_fields) - 1
+        operator.active_data_field_index = len(operator.data_fields) - 1
         
         return {'FINISHED'}
 
@@ -190,9 +190,9 @@ class IMPORT_OT_field_remove(bpy.types.Operator):
     def execute(self, context):
         sfile = context.space_data
         operator = sfile.active_operator
-        index = operator.field_name_index
+        index = operator.active_data_field_index
         operator.data_fields.remove(index)
-        operator.field_name_index = min(max(0,index - 1), len(operator.data_fields)-1)
+        operator.active_data_field_index = min(max(0,index - 1), len(operator.data_fields)-1)
         return {'FINISHED'}
 
 
@@ -224,7 +224,7 @@ class JSON_PT_imort_options(bpy.types.Panel):
             rows = 4
 
         row = layout.row()
-        row.template_list("MY_UL_List", "", operator, "data_fields", operator, "field_name_index", rows=rows)
+        row.template_list("MY_UL_List", "", operator, "data_fields", operator, "active_data_field_index", rows=rows)
 
         col = row.column(align=True)
         col.operator(IMPORT_OT_filed_add.bl_idname, icon='ADD', text="")
