@@ -52,8 +52,7 @@ def read_json_data(context, filepath, data_array_name, data_fields):
                 value = bool(value)
 
             mesh.attributes[data_field.name if data_field.name else "empty_key_string"].data[i].value = value
-        #mesh.attributes['weiblich'].data[i].value = k['geschlecht'] == 'F'
-        #mesh.attributes['kanton'].data[i].value = k['kanton_nummer']
+
         mesh.vertices[i].co = (i,0.0,0.0) # set vertex x position according to index
         i=i+1
 
@@ -74,7 +73,7 @@ def read_json_data(context, filepath, data_array_name, data_fields):
     return {'FINISHED'}
 
 
-class MY_UL_List(bpy.types.UIList):
+class JSON_UL_data_fields_list(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         custom_icon = 'OBJECT_DATAMODE'
         #item is a DataFieldPropertiesGroup
@@ -154,7 +153,7 @@ class ImportJsonData(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         return read_json_data(context, self.filepath, self.array_name, self.data_fields)
 
-class IMPORT_OT_filed_add(bpy.types.Operator):
+class AddDataFieldOperator(bpy.types.Operator):
     bl_idname = "import.json_field_add"
     bl_label = "Add field"
 
@@ -167,7 +166,7 @@ class IMPORT_OT_filed_add(bpy.types.Operator):
         
         return {'FINISHED'}
 
-class IMPORT_OT_field_remove(bpy.types.Operator):
+class RemoveDataFieldOperator(bpy.types.Operator):
     bl_idname = "import.json_field_remove"
     bl_label = "Remove field"
 
@@ -180,7 +179,7 @@ class IMPORT_OT_field_remove(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class JSON_PT_imort_options(bpy.types.Panel):
+class JSON_PT_field_names_panel(bpy.types.Panel):
     bl_space_type = 'FILE_BROWSER'
     bl_region_type = 'TOOL_PROPS'
     bl_label = "Field Names"
@@ -208,30 +207,19 @@ class JSON_PT_imort_options(bpy.types.Panel):
             rows = 4
 
         row = layout.row()
-        row.template_list("MY_UL_List", "", operator, "data_fields", operator, "active_data_field_index", rows=rows)
+        row.template_list("JSON_UL_data_fields_list", "", operator, "data_fields", operator, "active_data_field_index", rows=rows)
 
         col = row.column(align=True)
-        col.operator(IMPORT_OT_filed_add.bl_idname, icon='ADD', text="")
-        col.operator(IMPORT_OT_field_remove.bl_idname, icon='REMOVE', text="")
-
-class VIEW3D_PT_import_json(bpy.types.Panel):
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = "Import Json"
-    bl_label = "labllle"
-
-    def draw(self, context):
-        self.layout.operator(ImportJsonData.bl_idname, text="JSON Import Operator")
+        col.operator(AddDataFieldOperator.bl_idname, icon='ADD', text="")
+        col.operator(RemoveDataFieldOperator.bl_idname, icon='REMOVE', text="")
         
-
 blender_classes = [
-    MY_UL_List,
+    JSON_UL_data_fields_list,
     DataFieldPropertiesGroup,
     ImportJsonData,
-    VIEW3D_PT_import_json,
-    JSON_PT_imort_options,
-    IMPORT_OT_filed_add,
-    IMPORT_OT_field_remove,
+    JSON_PT_field_names_panel,
+    AddDataFieldOperator,
+    RemoveDataFieldOperator,
 ]
 
 # Only needed if you want to add into a dynamic menu
