@@ -13,11 +13,10 @@ from bpy_extras.io_utils import ImportHelper
 import json
 
 def read_json_data(context, filepath, data_array_name, data_fields):
-    print("importing data from json...")
+    #print("importing data from json...")
     f = open(filepath, 'r', encoding='utf-8-sig')
     data = json.load(f)
     
-    #todo: doain per data array.
     data_array = data[data_array_name] 
     
     # name of the object and mesh
@@ -37,8 +36,6 @@ def read_json_data(context, filepath, data_array_name, data_fields):
     # add custom data
     for data_field in data_fields:
         mesh.attributes.new(name=data_field.name if data_field.name else "empty_key_string", type=data_field.dataType, domain='POINT')
-    # mesh.attributes.new(name='weiblich', type='BOOLEAN', domain='POINT')
-    # mesh.attributes.new(name='kanton', type='INT', domain='POINT')
 
     # set data according to json
     i=0
@@ -125,6 +122,8 @@ class ImportJsonData(bpy.types.Operator, ImportHelper):
     # ImportHelper mixin class uses this
     filename_ext = ".json"
 
+    # List of operator properties, the attributes will be assigned
+
     filter_glob: bpy.props.StringProperty(
         default="*.json",
         options={'HIDDEN'},
@@ -137,34 +136,18 @@ class ImportJsonData(bpy.types.Operator, ImportHelper):
         default="",
     )
 
-    # List of operator properties, the attributes will be assigned
-    # to the class instance from the operator settings before calling.
-    use_setting: bpy.props.BoolProperty(
-        name="Example Boolean",
-        description="Example Tooltip",
-        default=True,
-    )
-
     data_fields: bpy.props.CollectionProperty(
         type=DataFieldPropertiesGroup,
         name="Field names",
         description="All the fields that should be imported",
+        options={'HIDDEN'},
     )
 
     # The index of the selected data_field
     active_data_field_index: bpy.props.IntProperty(
         name="Index of data_fields",
         default=0,
-    )
-
-    type: bpy.props.EnumProperty(
-        name="Example Enum",
-        description="Choose between two items",
-        items=(
-            ('OPT_A', "First Option", "Description one"),
-            ('OPT_B', "Second Option", "Description two"),
-        ),
-        default='OPT_A',
+        options={'HIDDEN'},
     )
 
     def execute(self, context):
@@ -199,7 +182,7 @@ class IMPORT_OT_field_remove(bpy.types.Operator):
 class JSON_PT_imort_options(bpy.types.Panel):
     bl_space_type = 'FILE_BROWSER'
     bl_region_type = 'TOOL_PROPS'
-    bl_label = "Dataa Import Options"
+    bl_label = "Field Names"
     bl_parent_id = "FILE_PT_operator"
 
     @classmethod
@@ -229,9 +212,6 @@ class JSON_PT_imort_options(bpy.types.Panel):
         col = row.column(align=True)
         col.operator(IMPORT_OT_filed_add.bl_idname, icon='ADD', text="")
         col.operator(IMPORT_OT_field_remove.bl_idname, icon='REMOVE', text="")
-
-        # print(operator.data_fields)
-        pass
 
 class VIEW3D_PT_import_json(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
