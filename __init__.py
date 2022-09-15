@@ -44,8 +44,18 @@ def read_json_data(context, filepath, data_array_name, field_names):
     # set data according to json
     i=0
     for k in data_array:
+
+        # make sure it's the right data type
         for field_name in field_names:
-            mesh.attributes[field_name.name if field_name.name else "empty_key_string"].data[i].value = k[field_name.name]
+            value = k[field_name.name]
+            if(field_name.dataType == 'FLOAT'):
+                value = float(value)
+            elif(field_name.dataType == 'INT'):
+                value = int(value)
+            elif(field_name.dataType == 'BOOLEAN'):
+                value = bool(value)
+
+            mesh.attributes[field_name.name if field_name.name else "empty_key_string"].data[i].value = value
         #mesh.attributes['weiblich'].data[i].value = k['geschlecht'] == 'F'
         #mesh.attributes['kanton'].data[i].value = k['kanton_nummer']
         mesh.vertices[i].co = (i,0.0,0.0) # set vertex x position according to index
