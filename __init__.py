@@ -12,7 +12,7 @@ import bpy
 from bpy_extras.io_utils import ImportHelper
 import json
 
-def read_json_data(context, filepath, data_array_name, field_names):
+def read_json_data(context, filepath, data_array_name, data_fields):
     print("importing data from json...")
     f = open(filepath, 'r', encoding='utf-8-sig')
     data = json.load(f)
@@ -35,7 +35,7 @@ def read_json_data(context, filepath, data_array_name, field_names):
     # That's why an empty key in JSON generates an attribute with the name "empty_key_string"
 
     # add custom data
-    for field_name in field_names:
+    for field_name in data_fields:
         mesh.attributes.new(name=field_name.name if field_name.name else "empty_key_string", type=field_name.dataType, domain='POINT')
     # mesh.attributes.new(name='weiblich', type='BOOLEAN', domain='POINT')
     # mesh.attributes.new(name='kanton', type='INT', domain='POINT')
@@ -45,7 +45,7 @@ def read_json_data(context, filepath, data_array_name, field_names):
     for k in data_array:
 
         # make sure it's the right data type
-        for field_name in field_names:
+        for field_name in data_fields:
             value = k[field_name.name]
             if(field_name.dataType == 'FLOAT'):
                 value = float(value)
@@ -145,14 +145,15 @@ class ImportJsonData(bpy.types.Operator, ImportHelper):
         default=True,
     )
 
-    field_names: bpy.props.CollectionProperty(
+    data_fields: bpy.props.CollectionProperty(
         type=DataFieldPropertiesGroup,
         name="Field names",
         description="All the fields that should be imported",
     )
 
+    # The index of the selected data_field
     field_name_index: bpy.props.IntProperty(
-        name="Index of field_names",
+        name="Index of data_fields",
         default=0,
     )
 
@@ -167,7 +168,7 @@ class ImportJsonData(bpy.types.Operator, ImportHelper):
     )
 
     def execute(self, context):
-        return read_json_data(context, self.filepath, self.array_name, self.field_names)
+        return read_json_data(context, self.filepath, self.array_name, self.data_fields)
 
 class IMPORT_OT_filed_add(bpy.types.Operator):
     bl_idname = "import.json_field_add"
@@ -176,9 +177,9 @@ class IMPORT_OT_filed_add(bpy.types.Operator):
     def execute(self, context):
         sfile = context.space_data
         operator = sfile.active_operator
-        item = operator.field_names.add()
+        item = operator.data_fields.add()
 
-        operator.field_name_index = len(operator.field_names) - 1
+        operator.field_name_index = len(operator.data_fields) - 1
         
         return {'FINISHED'}
 
@@ -190,8 +191,8 @@ class IMPORT_OT_field_remove(bpy.types.Operator):
         sfile = context.space_data
         operator = sfile.active_operator
         index = operator.field_name_index
-        operator.field_names.remove(index)
-        operator.field_name_index = min(max(0,index - 1), len(operator.field_names)-1)
+        operator.data_fields.remove(index)
+        operator.field_name_index = min(max(0,index - 1), len(operator.data_fields)-1)
         return {'FINISHED'}
 
 
@@ -212,24 +213,24 @@ class JSON_PT_imort_options(bpy.types.Panel):
         operator = sfile.active_operator
         layout = self.layout
 
-        #layout.template_list("UI_UL_list", "", operator, "field_names", operator, )
+        #layout.template_list("UI_UL_list", "", operator, "data_fields", operator, )
         
         # success with this tutorial!
         # https://sinestesia.co/blog/tutorials/using-uilists-in-blender/
 
         rows = 2
-        filed_names_exist = bool(len(operator.field_names) >= 1)
+        filed_names_exist = bool(len(operator.data_fields) >= 1)
         if filed_names_exist:
             rows = 4
 
         row = layout.row()
-        row.template_list("MY_UL_List", "", operator, "field_names", operator, "field_name_index", rows=rows)
+        row.template_list("MY_UL_List", "", operator, "data_fields", operator, "field_name_index", rows=rows)
 
         col = row.column(align=True)
         col.operator(IMPORT_OT_filed_add.bl_idname, icon='ADD', text="")
         col.operator(IMPORT_OT_field_remove.bl_idname, icon='REMOVE', text="")
 
-        # print(operator.field_names)
+        # print(operator.data_fields)
         pass
 
 class VIEW3D_PT_import_json(bpy.types.Panel):
