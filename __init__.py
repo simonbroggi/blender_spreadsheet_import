@@ -123,6 +123,7 @@ class ImportJsonData(bpy.types.Operator, ImportHelper):
     filename_ext = ".json"
 
     # List of operator properties, the attributes will be assigned
+    # to the class instance from the operator settings before calling.
 
     filter_glob: bpy.props.StringProperty(
         default="*.json",
