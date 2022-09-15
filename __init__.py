@@ -81,13 +81,13 @@ class MY_UL_List(bpy.types.UIList):
         #print(type(item.name))
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             #layout.label(text=item.name, icon = custom_icon)
-            layout.prop(data=item, property="name")
-            layout.prop(data=item, property="dataType")
+            layout.prop(data=item, property="name", text="")
+            layout.prop(data=item, property="dataType", text="")
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
             #layout.label(text="", icon = custom_icon)
-            layout.prop(data=item, property="name")
-            layout.prop(data=item, property="dataType")
+            layout.prop(data=item, property="name", text="")
+            layout.prop(data=item, property="dataType", text="")
 
 
 # https://blender.stackexchange.com/questions/16511/how-can-i-store-and-retrieve-a-custom-list-in-a-blend-file
