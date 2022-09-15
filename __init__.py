@@ -11,7 +11,6 @@ bl_info = {
 import bpy
 from bpy_extras.io_utils import ImportHelper
 import json
-import random #todo: remove
 
 def read_json_data(context, filepath, data_array_name, field_names):
     print("importing data from json...")
@@ -180,10 +179,6 @@ class IMPORT_OT_filed_add(bpy.types.Operator):
         item = operator.field_names.add()
 
         operator.field_name_index = len(operator.field_names) - 1
-
-        #todo: dont initialize randomly
-        item.name = random.sample(("foo", "bar", "asdf"), 1)[0]
-        item.dataType = 'INT' if random.random() > 0.5 else 'BOOLEAN'
         
         return {'FINISHED'}
 
