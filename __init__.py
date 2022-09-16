@@ -1,10 +1,10 @@
 bl_info = {
-    "name": "Generig JSON Importer",
+    "name": "Spreadsheet Data Importer",
     "author": "Simon Broggi",
-    "version": (0,1,0),
+    "version": (0, 2, 0),
     "blender": (3, 3, 0),
     "location": "File > Import-Export",
-    "description": "Import data from JSON file for use with geometry nodes",
+    "description": "Import data to spreadsheet for use with geometry nodes",
     "category": "Import-Export",
 }
 
