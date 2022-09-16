@@ -74,6 +74,8 @@ def read_json_data(context, filepath, data_array_name, data_fields):
 
 def read_csv_data(context, filepath, data_fields):
     print('todo: import csv')
+    # https://www.youtube.com/watch?v=wEj7cfwL6RY
+    # https://docs.python.org/3/library/csv.html
     return {'FINISHED'}
 
 class SPREADSHEET_UL_data_fields(bpy.types.UIList):
