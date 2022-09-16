@@ -72,8 +72,11 @@ def read_json_data(context, filepath, data_array_name, data_fields):
     f.close()
     return {'FINISHED'}
 
+def read_csv_data(context, filepath, data_fields):
+    print('todo: import csv')
+    return {'FINISHED'}
 
-class JSON_UL_data_fields_list(bpy.types.UIList):
+class SPREADSHEET_UL_data_fields(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         custom_icon = 'OBJECT_DATAMODE'
         #item is a DataFieldPropertiesGroup
@@ -113,19 +116,19 @@ class DataFieldPropertiesGroup(bpy.types.PropertyGroup):
     )
 
 # ImportHelper is a helper class, defines filename and invoke() function which calls the file selector.
-class ImportJsonData(bpy.types.Operator, ImportHelper):
-    """Import data from JSON files"""
-    bl_idname = "import.json"  # important since its how bpy.ops.import.json is constructed
-    bl_label = "Import JSON Data"
+class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
+    """Import data to Spreadsheet"""
+    bl_idname = "import.spreadsheet"  # important since its how bpy.ops.import.spreadsheet is constructed
+    bl_label = "Import Spreadsheet Data"
 
     # ImportHelper mixin class uses this
-    filename_ext = ".json"
+    filename_ext = ".json;.csv"
 
     # List of operator properties, the attributes will be assigned
     # to the class instance from the operator settings before calling.
 
     filter_glob: bpy.props.StringProperty(
-        default="*.json",
+        default="*.json;*.csv",
         options={'HIDDEN'},
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
@@ -151,10 +154,13 @@ class ImportJsonData(bpy.types.Operator, ImportHelper):
     )
 
     def execute(self, context):
-        return read_json_data(context, self.filepath, self.array_name, self.data_fields)
+        if(self.filepath.endswith('.json')):
+            return read_json_data(context, self.filepath, self.array_name, self.data_fields)
+        elif(self.filepath.endswith('.csv')):
+            return read_csv_data(context, self.filepath, self.data_fields)
 
 class AddDataFieldOperator(bpy.types.Operator):
-    bl_idname = "import.json_field_add"
+    bl_idname = "import.spreadsheet_field_add"
     bl_label = "Add field"
 
     def execute(self, context):
@@ -167,7 +173,7 @@ class AddDataFieldOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 class RemoveDataFieldOperator(bpy.types.Operator):
-    bl_idname = "import.json_field_remove"
+    bl_idname = "import.spreadsheet_field_remove"
     bl_label = "Remove field"
 
     def execute(self, context):
@@ -179,7 +185,7 @@ class RemoveDataFieldOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class JSON_PT_field_names_panel(bpy.types.Panel):
+class SPREADSHEET_PT_field_names(bpy.types.Panel):
     bl_space_type = 'FILE_BROWSER'
     bl_region_type = 'TOOL_PROPS'
     bl_label = "Field Names"
@@ -189,7 +195,7 @@ class JSON_PT_field_names_panel(bpy.types.Panel):
     def poll(cls, context):
         sfile = context.space_data
         operator = sfile.active_operator
-        return operator.bl_idname == "IMPORT_OT_json"
+        return operator.bl_idname == "IMPORT_OT_spreadsheet"
 
     def draw(self, context):
         sfile = context.space_data
@@ -207,24 +213,24 @@ class JSON_PT_field_names_panel(bpy.types.Panel):
             rows = 4
 
         row = layout.row()
-        row.template_list("JSON_UL_data_fields_list", "", operator, "data_fields", operator, "active_data_field_index", rows=rows)
+        row.template_list("SPREADSHEET_UL_data_fields", "", operator, "data_fields", operator, "active_data_field_index", rows=rows)
 
         col = row.column(align=True)
         col.operator(AddDataFieldOperator.bl_idname, icon='ADD', text="")
         col.operator(RemoveDataFieldOperator.bl_idname, icon='REMOVE', text="")
         
 blender_classes = [
-    JSON_UL_data_fields_list,
+    SPREADSHEET_UL_data_fields,
     DataFieldPropertiesGroup,
-    ImportJsonData,
-    JSON_PT_field_names_panel,
+    ImportSpreadsheetData,
+    SPREADSHEET_PT_field_names,
     AddDataFieldOperator,
     RemoveDataFieldOperator,
 ]
 
 # Only needed if you want to add into a dynamic menu
 def menu_func_import(self, context):
-    self.layout.operator(ImportJsonData.bl_idname, text="JSON Import Operator")
+    self.layout.operator(ImportSpreadsheetData.bl_idname, text="Spreadsheet Import Operator")
 
 # Register and add to the "file selector" menu (required to use F3 search "Text Import Operator" for quick access)
 def register():
