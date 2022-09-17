@@ -11,6 +11,7 @@ bl_info = {
 import bpy
 from bpy_extras.io_utils import ImportHelper
 import json
+import csv
 
 def read_json_data(context, filepath, data_array_name, data_fields):
     #print("importing data from json...")
@@ -74,6 +75,13 @@ def read_json_data(context, filepath, data_array_name, data_fields):
 
 def read_csv_data(context, filepath, data_fields):
     print('todo: import csv')
+    #todo: import the same way as JSON: rely on user to name fields and data types
+    with open(filepath, 'r', newline='') as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        for row in csv_reader:
+            for k in row:
+                print(k + " : " + row[k])
+            #print(row['Quartal'], row['Erdgas'])
     # https://www.youtube.com/watch?v=wEj7cfwL6RY
     # https://docs.python.org/3/library/csv.html
     return {'FINISHED'}
