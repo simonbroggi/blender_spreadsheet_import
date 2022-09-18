@@ -23,7 +23,7 @@ def read_json_data(context, filepath, data_array_name, data_fields):
     # name of the object and mesh
     data_name = "imported_data"
     
-    mesh = bpy.data.meshes.new(name=data_name)
+    mesh = bpy.data.meshes.new(name="json_data")
     mesh.vertices.add(len(data_array))
     #coordinates = np.ones((len(data_array)*3))
     #mesh.vertices.foreach_set("co", coordinates)
@@ -35,8 +35,7 @@ def read_json_data(context, filepath, data_array_name, data_fields):
     # That's why an empty key in JSON generates an attribute with the name "empty_key_string"
 
     # add custom data
-    for data_field in data_fields:
-        mesh.attributes.new(name=data_field.name if data_field.name else "empty_key_string", type=data_field.dataType, domain='POINT')
+    add_data_fields(mesh, data_fields)
 
     # set data according to json
     i=0
@@ -58,17 +57,11 @@ def read_json_data(context, filepath, data_array_name, data_fields):
         i=i+1
 
     #todo: nicer error messages
-    
-    # Create new object
-    for ob in bpy.context.selected_objects:
-        ob.select_set(False)
-    obj = bpy.data.objects.new(data_name, mesh)
-    bpy.context.collection.objects.link(obj)
-    bpy.context.view_layer.objects.active = obj
-    obj.select_set(True)
-    
+
     mesh.update()
     mesh.validate()
+    
+    create_object(mesh, data_array_name)
     
     f.close()
     return {'FINISHED'}
@@ -76,15 +69,65 @@ def read_json_data(context, filepath, data_array_name, data_fields):
 def read_csv_data(context, filepath, data_fields):
     print('todo: import csv')
     #todo: import the same way as JSON: rely on user to name fields and data types
+    
+
+    mesh = bpy.data.meshes.new(name="csv_data")
+
+    add_data_fields(mesh, data_fields)
+    
     with open(filepath, 'r', newline='') as csv_file:
+
+        print("importing " + csv_file.name)
         csv_reader = csv.DictReader(csv_file)
+
+        i=0
         for row in csv_reader:
-            for k in row:
-                print(k + " : " + row[k])
+            mesh.vertices.add(1)
+            mesh.update() #might be slow, but does it matter?...
+            
+            # make sure it's the right data type
+            for data_field in data_fields:
+                value = row[data_field.name]
+                if(data_field.dataType == 'FLOAT'):
+                    value = float(value)
+                elif(data_field.dataType == 'INT'):
+                    value = int(value)
+                elif(data_field.dataType == 'BOOLEAN'):
+                    value = bool(value)
+                
+                mesh.attributes[data_field.name if data_field.name else "empty_key_string"].data[i].value = value
+
+                i = i+1
+
+        mesh.update()
+        mesh.validate()
+
+        create_object(mesh, "csv_import")
+
+        csv_file.close()
+
+    return {'FINISHED'}
+
             #print(row['Quartal'], row['Erdgas'])
     # https://www.youtube.com/watch?v=wEj7cfwL6RY
     # https://docs.python.org/3/library/csv.html
+
+
     return {'FINISHED'}
+
+def add_data_fields(mesh, data_fields):
+    # add custom data
+    for data_field in data_fields:
+        mesh.attributes.new(name=data_field.name if data_field.name else "empty_key_string", type=data_field.dataType, domain='POINT')
+
+def create_object(mesh, name):
+    # Create new object
+    for ob in bpy.context.selected_objects:
+        ob.select_set(False)
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    bpy.context.view_layer.objects.active = obj
+    obj.select_set(True)
 
 class SPREADSHEET_UL_data_fields(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
