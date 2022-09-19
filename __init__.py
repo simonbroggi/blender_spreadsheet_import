@@ -175,7 +175,7 @@ class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
     bl_label = "Import Spreadsheet Data"
 
     # ImportHelper mixin class uses this
-    filename_ext = ".json;.csv"
+    # filename_ext = ".json;.csv"
 
     # List of operator properties, the attributes will be assigned
     # to the class instance from the operator settings before calling.
@@ -190,6 +190,7 @@ class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
         name="Array name",
         description="The name of the array to import",
         default="",
+        options={'HIDDEN'},
     )
 
     data_fields: bpy.props.CollectionProperty(
@@ -237,6 +238,24 @@ class RemoveDataFieldOperator(bpy.types.Operator):
         operator.active_data_field_index = min(max(0,index - 1), len(operator.data_fields)-1)
         return {'FINISHED'}
 
+class SPREADSHEET_PT_array_name(bpy.types.Panel):
+    bl_space_type = 'FILE_BROWSER'
+    bl_region_type = 'TOOL_PROPS'
+    bl_label = "Array Name"
+    bl_parent_id = "FILE_PT_operator"
+
+    @classmethod
+    def poll(cls, context):
+        sfile = context.space_data
+        operator = sfile.active_operator
+        return operator.bl_idname == "IMPORT_OT_spreadsheet" and operator.filepath.lower().endswith('.json')
+
+    def draw(self, context):
+        sfile = context.space_data
+        operator = sfile.active_operator
+        layout = self.layout
+        #(data=item, property="name", text="")
+        layout.prop(data=operator, property="array_name")
 
 class SPREADSHEET_PT_field_names(bpy.types.Panel):
     bl_space_type = 'FILE_BROWSER'
@@ -276,6 +295,7 @@ blender_classes = [
     SPREADSHEET_UL_data_fields,
     DataFieldPropertiesGroup,
     ImportSpreadsheetData,
+    SPREADSHEET_PT_array_name,
     SPREADSHEET_PT_field_names,
     AddDataFieldOperator,
     RemoveDataFieldOperator,
