@@ -66,7 +66,7 @@ def read_json_data(context, filepath, data_array_name, data_fields):
     f.close()
     return {'FINISHED'}
 
-def read_csv_data(context, filepath, data_fields):
+def read_csv_data(context, filepath, data_fields, leading_liens_to_discard=0):
     print('todo: import csv')
     #todo: import the same way as JSON: rely on user to name fields and data types
     
@@ -75,9 +75,14 @@ def read_csv_data(context, filepath, data_fields):
 
     add_data_fields(mesh, data_fields)
     
-    with open(filepath, 'r', newline='') as csv_file:
+    with open(filepath, 'r', encoding='latin-1', newline='') as csv_file:
 
-        print("importing " + csv_file.name)
+        print("importing {file} without the first {lines}".format(file=filepath, lines=leading_liens_to_discard))
+        discarded_leading_lines = 0
+        while(discarded_leading_lines < leading_liens_to_discard):
+            line = csv_file.readline()
+            #print("discarded line " + discarded_leading_lines + ": " + line)
+            discarded_leading_lines = discarded_leading_lines + 1
         csv_reader = csv.DictReader(csv_file)
 
         i=0
@@ -87,6 +92,7 @@ def read_csv_data(context, filepath, data_fields):
             
             # make sure it's the right data type
             for data_field in data_fields:
+                print(row.keys())
                 value = row[data_field.name]
                 if(data_field.dataType == 'FLOAT'):
                     value = float(value)
@@ -94,7 +100,6 @@ def read_csv_data(context, filepath, data_fields):
                     value = int(value)
                 elif(data_field.dataType == 'BOOLEAN'):
                     value = bool(value)
-                
                 mesh.attributes[data_field.name if data_field.name else "empty_key_string"].data[i].value = value
 
                 i = i+1
@@ -113,7 +118,7 @@ def read_csv_data(context, filepath, data_fields):
     # https://docs.python.org/3/library/csv.html
 
 
-    return {'FINISHED'}
+    return {'FINISHED'}    
 
 def add_data_fields(mesh, data_fields):
     # add custom data
@@ -211,7 +216,7 @@ class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
         if(self.filepath.endswith('.json')):
             return read_json_data(context, self.filepath, self.array_name, self.data_fields)
         elif(self.filepath.endswith('.csv')):
-            return read_csv_data(context, self.filepath, self.data_fields)
+            return read_csv_data(context, self.filepath, self.data_fields, 4)
 
 class AddDataFieldOperator(bpy.types.Operator):
     bl_idname = "import.spreadsheet_field_add"
