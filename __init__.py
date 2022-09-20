@@ -57,6 +57,7 @@ def read_json_data(context, filepath, data_array_name, data_fields):
         i=i+1
 
     #todo: nicer error messages
+    #todo: csv message how many lines got imported imported "imported values from line 6 to line 117"
 
     mesh.update()
     mesh.validate()
@@ -66,7 +67,7 @@ def read_json_data(context, filepath, data_array_name, data_fields):
     f.close()
     return {'FINISHED'}
 
-def read_csv_data(context, filepath, data_fields, leading_liens_to_discard=0):
+def read_csv_data(context, filepath, data_fields, delimiter=",", leading_liens_to_discard=0):
     mesh = bpy.data.meshes.new(name="csv_data")
 
     add_data_fields(mesh, data_fields)
@@ -80,7 +81,7 @@ def read_csv_data(context, filepath, data_fields, leading_liens_to_discard=0):
             #print("discarded line " + discarded_leading_lines + ": " + line)
             discarded_leading_lines = discarded_leading_lines + 1
 
-        csv_reader = csv.DictReader(csv_file, delimiter=';')
+        csv_reader = csv.DictReader(csv_file, delimiter=delimiter)
 
         i=0
 
@@ -119,13 +120,9 @@ def read_csv_data(context, filepath, data_fields, leading_liens_to_discard=0):
         create_object(mesh, "csv_import")
 
         csv_file.close()
-
-    return {'FINISHED'}
-
             #print(row['Quartal'], row['Erdgas'])
     # https://www.youtube.com/watch?v=wEj7cfwL6RY
     # https://docs.python.org/3/library/csv.html
-
 
     return {'FINISHED'}    
 
@@ -226,15 +223,27 @@ class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
         options={'HIDDEN'},
     )
 
-    #todo: add property to specify leading lines to discard
-    #todo: add property to specify footer line
-    #todo: add property to specify csv_delimiter
+    csv_delimiter: bpy.props.StringProperty(
+        name="Delimiter",
+        description="A one-character string used to separate fields.",
+        default=",",
+        maxlen=1,
+        options={'HIDDEN'},
+    )
+
+    csv_leading_lines_to_discard: bpy.props.IntProperty(
+        name="Discard leading lines",
+        description="Leading lines to discard",
+        default=0,
+        min=0,
+        options={'HIDDEN'},
+    )
 
     def execute(self, context):
         if(self.filepath.endswith('.json')):
             return read_json_data(context, self.filepath, self.array_name, self.data_fields)
         elif(self.filepath.endswith('.csv')):
-            return read_csv_data(context, self.filepath, self.data_fields, 4)
+            return read_csv_data(context, self.filepath, self.data_fields, self.csv_delimiter, self.csv_leading_lines_to_discard)
 
 class AddDataFieldOperator(bpy.types.Operator):
     bl_idname = "import.spreadsheet_field_add"
@@ -280,6 +289,25 @@ class SPREADSHEET_PT_array_name(bpy.types.Panel):
         #(data=item, property="name", text="")
         layout.prop(data=operator, property="array_name")
 
+class SPREADSHEET_PT_csv_options(bpy.types.Panel):
+    bl_space_type = 'FILE_BROWSER'
+    bl_region_type = 'TOOL_PROPS'
+    bl_label = "CSV Import Options"
+    bl_parent_id = "FILE_PT_operator"
+
+    @classmethod
+    def poll(cls, context):
+        sfile = context.space_data
+        operator = sfile.active_operator
+        return operator.bl_idname == "IMPORT_OT_spreadsheet" and operator.filepath.lower().endswith('.csv')
+
+    def draw(self, context):
+        sfile = context.space_data
+        operator = sfile.active_operator
+        layout = self.layout
+        layout.prop(data=operator, property="csv_delimiter")
+        layout.prop(data=operator, property="csv_leading_lines_to_discard")
+
 class SPREADSHEET_PT_field_names(bpy.types.Panel):
     bl_space_type = 'FILE_BROWSER'
     bl_region_type = 'TOOL_PROPS'
@@ -320,6 +348,7 @@ blender_classes = [
     ImportSpreadsheetData,
     SPREADSHEET_PT_array_name,
     SPREADSHEET_PT_field_names,
+    SPREADSHEET_PT_csv_options,
     AddDataFieldOperator,
     RemoveDataFieldOperator,
 ]
