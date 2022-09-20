@@ -14,7 +14,11 @@ import json
 import csv
 
 def read_json_data(context, filepath, data_array_name, data_fields, encoding='utf-8-sig'):
-    #print("importing data from json...")
+
+    # return variables for displaying a report
+    report_type = 'INFO'
+    report_message = ""
+
     f = open(filepath, 'r', encoding=encoding)
     data = json.load(f)
     
@@ -56,19 +60,25 @@ def read_json_data(context, filepath, data_array_name, data_fields, encoding='ut
         mesh.vertices[i].co = (i,0.0,0.0) # set vertex x position according to index
         i=i+1
 
-    #todo: error messages: key error
-    #todo: csv message how many lines got imported imported "imported values from line 6 to line 117"
+    f.close()
 
     mesh.update()
     mesh.validate()
 
-    object_name = bpy.path.display_name(bpy.path.basename(filepath))
+    file_name = bpy.path.basename(filepath)
+    object_name = bpy.path.display_name(file_name)
     create_object(mesh, object_name)
     
-    f.close()
-    return {'FINISHED'}
+    report_message = "Imported {num_values} from \"{file_name}\"".format(num_values=i, file_name=file_name)
+
+    return report_message, report_type
 
 def read_csv_data(context, filepath, data_fields, encoding='latin-1', delimiter=",", leading_liens_to_discard=0):
+
+    # return variables for displaying a report
+    report_type = 'INFO'
+    report_message = ""
+
     mesh = bpy.data.meshes.new(name="csv_data")
 
     add_data_fields(mesh, data_fields)
@@ -84,8 +94,8 @@ def read_csv_data(context, filepath, data_fields, encoding='latin-1', delimiter=
 
         csv_reader = csv.DictReader(csv_file, delimiter=delimiter)
 
+        error_message = ""
         i=0
-
         try:
             for row in csv_reader:
                 # make sure it's the right data type
@@ -109,21 +119,33 @@ def read_csv_data(context, filepath, data_fields, encoding='latin-1', delimiter=
 
                 mesh.vertices[i].co = (i,0.0,0.0) # set vertex x position according to index
                 i = i+1
-        except ValueError:
-            print("value error on line {line_number}".format(line_number=discarded_leading_lines + i + 1))
+        except ValueError as e:
+            error_message = repr(e)
+            report_type = 'WARNING'
+        except KeyError as e:
+            error_message = repr(e)
+            report_type = 'WARNING'
+
+        csv_file.close()
 
         mesh.update()
         mesh.validate()
 
-        object_name = bpy.path.display_name(bpy.path.basename(filepath))
-        create_object(mesh, object_name)
+        file_name = bpy.path.basename(filepath)
+        object_name = bpy.path.display_name(file_name)
 
-        csv_file.close()
-            #print(row['Quartal'], row['Erdgas'])
-    # https://www.youtube.com/watch?v=wEj7cfwL6RY
-    # https://docs.python.org/3/library/csv.html
+        # create object if data was imported
+        if (len(mesh.vertices) > 0):
+            create_object(mesh, object_name)
+            report_message = "Imported {num_values} lines from \"{file_name}\".".format(num_values=i, file_name=file_name)
+        else:
+            report_message = "Import failed. Check if import options match CSV File!"
+            report_type = 'ERROR'
 
-    return {'FINISHED'}    
+        report_message = "{message}\n{error_message}".format(message=report_message, error_message=error_message)
+
+    return report_message, report_type
+
 
 def add_data_fields(mesh, data_fields):
     # add custom data
@@ -256,9 +278,12 @@ class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         if(self.filepath.endswith('.json')):
-            return read_json_data(context, self.filepath, self.array_name, self.data_fields, self.json_encoding)
+            report_message, report_type = read_json_data(context, self.filepath, self.array_name, self.data_fields, self.json_encoding)
         elif(self.filepath.endswith('.csv')):
-            return read_csv_data(context, self.filepath, self.data_fields, self.csv_encoding, self.csv_delimiter, self.csv_leading_lines_to_discard)
+            report_message, report_type = read_csv_data(context, self.filepath, self.data_fields, self.csv_encoding, self.csv_delimiter, self.csv_leading_lines_to_discard)
+        
+        self.report({report_type}, report_message)
+        return {'FINISHED'}
 
 class AddDataFieldOperator(bpy.types.Operator):
     bl_idname = "import.spreadsheet_field_add"
