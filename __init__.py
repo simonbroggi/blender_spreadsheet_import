@@ -56,7 +56,7 @@ def read_json_data(context, filepath, data_array_name, data_fields, encoding='ut
         mesh.vertices[i].co = (i,0.0,0.0) # set vertex x position according to index
         i=i+1
 
-    #todo: nicer error messages
+    #todo: error messages
     #todo: csv message how many lines got imported imported "imported values from line 6 to line 117"
 
     mesh.update()
@@ -183,7 +183,7 @@ class DataFieldPropertiesGroup(bpy.types.PropertyGroup):
 class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
     """Import data to Spreadsheet"""
     bl_idname = "import.spreadsheet"  # important since its how bpy.ops.import.spreadsheet is constructed
-    bl_label = "Import Spreadsheet Data"
+    bl_label = "Import Spreadsheet"
 
     # ImportHelper mixin class uses this
     # filename_ext = ".json;.csv"
@@ -247,6 +247,10 @@ class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
         default="latin-1",
         options={'HIDDEN'},
     )
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label(text="Import Spreadsheet Options")
 
     def execute(self, context):
         if(self.filepath.endswith('.json')):
@@ -365,7 +369,7 @@ blender_classes = [
 
 # Only needed if you want to add into a dynamic menu
 def menu_func_import(self, context):
-    self.layout.operator(ImportSpreadsheetData.bl_idname, text="Spreadsheet Import Operator")
+    self.layout.operator(ImportSpreadsheetData.bl_idname, text="Spreadsheet Import (.csv, .json)")
 
 # Register and add to the "file selector" menu (required to use F3 search "Text Import Operator" for quick access)
 def register():
