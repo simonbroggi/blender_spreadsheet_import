@@ -13,9 +13,9 @@ from bpy_extras.io_utils import ImportHelper
 import json
 import csv
 
-def read_json_data(context, filepath, data_array_name, data_fields):
+def read_json_data(context, filepath, data_array_name, data_fields, encoding='utf-8-sig'):
     #print("importing data from json...")
-    f = open(filepath, 'r', encoding='utf-8-sig')
+    f = open(filepath, 'r', encoding=encoding)
     data = json.load(f)
     
     data_array = data[data_array_name] 
@@ -67,12 +67,12 @@ def read_json_data(context, filepath, data_array_name, data_fields):
     f.close()
     return {'FINISHED'}
 
-def read_csv_data(context, filepath, data_fields, delimiter=",", leading_liens_to_discard=0):
+def read_csv_data(context, filepath, data_fields, encoding='latin-1', delimiter=",", leading_liens_to_discard=0):
     mesh = bpy.data.meshes.new(name="csv_data")
 
     add_data_fields(mesh, data_fields)
     
-    with open(filepath, 'r', encoding='latin-1', newline='') as csv_file:
+    with open(filepath, 'r', encoding=encoding, newline='') as csv_file:
 
         print("importing {file} without the first {lines}".format(file=filepath, lines=leading_liens_to_discard))
         discarded_leading_lines = 0
@@ -87,9 +87,6 @@ def read_csv_data(context, filepath, data_fields, delimiter=",", leading_liens_t
 
         try:
             for row in csv_reader:
-                print(row)
-
-                
                 # make sure it's the right data type
                 # raises ValueError if the datatype can not be converted 
                 for data_field in data_fields:
@@ -200,15 +197,6 @@ class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
 
-    array_name: bpy.props.StringProperty(
-        name="Array name",
-        description="The name of the array to import",
-        default="",
-        options={'HIDDEN'},
-    )
-
-    #todo: add property to specify file encoding 
-
     data_fields: bpy.props.CollectionProperty(
         type=DataFieldPropertiesGroup,
         name="Field names",
@@ -220,6 +208,20 @@ class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
     active_data_field_index: bpy.props.IntProperty(
         name="Index of data_fields",
         default=0,
+        options={'HIDDEN'},
+    )
+
+    array_name: bpy.props.StringProperty(
+        name="Array name",
+        description="The name of the array to import",
+        default="",
+        options={'HIDDEN'},
+    )
+    
+    json_encoding: bpy.props.StringProperty(
+        name="Encoding",
+        description="Encoding of the JSON File",
+        default="utf-8-sig",
         options={'HIDDEN'},
     )
 
@@ -239,11 +241,18 @@ class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
         options={'HIDDEN'},
     )
 
+    csv_encoding: bpy.props.StringProperty(
+        name="Encoding",
+        description="Encoding of the CSV File",
+        default="latin-1",
+        options={'HIDDEN'},
+    )
+
     def execute(self, context):
         if(self.filepath.endswith('.json')):
-            return read_json_data(context, self.filepath, self.array_name, self.data_fields)
+            return read_json_data(context, self.filepath, self.array_name, self.data_fields, self.json_encoding)
         elif(self.filepath.endswith('.csv')):
-            return read_csv_data(context, self.filepath, self.data_fields, self.csv_delimiter, self.csv_leading_lines_to_discard)
+            return read_csv_data(context, self.filepath, self.data_fields, self.csv_encoding, self.csv_delimiter, self.csv_leading_lines_to_discard)
 
 class AddDataFieldOperator(bpy.types.Operator):
     bl_idname = "import.spreadsheet_field_add"
@@ -270,10 +279,10 @@ class RemoveDataFieldOperator(bpy.types.Operator):
         operator.active_data_field_index = min(max(0,index - 1), len(operator.data_fields)-1)
         return {'FINISHED'}
 
-class SPREADSHEET_PT_array_name(bpy.types.Panel):
+class SPREADSHEET_PT_json_options(bpy.types.Panel):
     bl_space_type = 'FILE_BROWSER'
     bl_region_type = 'TOOL_PROPS'
-    bl_label = "Array Name"
+    bl_label = "JSON Import Options"
     bl_parent_id = "FILE_PT_operator"
 
     @classmethod
@@ -286,8 +295,8 @@ class SPREADSHEET_PT_array_name(bpy.types.Panel):
         sfile = context.space_data
         operator = sfile.active_operator
         layout = self.layout
-        #(data=item, property="name", text="")
         layout.prop(data=operator, property="array_name")
+        layout.prop(data=operator, property="json_encoding")
 
 class SPREADSHEET_PT_csv_options(bpy.types.Panel):
     bl_space_type = 'FILE_BROWSER'
@@ -307,6 +316,7 @@ class SPREADSHEET_PT_csv_options(bpy.types.Panel):
         layout = self.layout
         layout.prop(data=operator, property="csv_delimiter")
         layout.prop(data=operator, property="csv_leading_lines_to_discard")
+        layout.prop(data=operator, property="csv_encoding")
 
 class SPREADSHEET_PT_field_names(bpy.types.Panel):
     bl_space_type = 'FILE_BROWSER'
@@ -346,8 +356,8 @@ blender_classes = [
     SPREADSHEET_UL_data_fields,
     DataFieldPropertiesGroup,
     ImportSpreadsheetData,
-    SPREADSHEET_PT_array_name,
     SPREADSHEET_PT_field_names,
+    SPREADSHEET_PT_json_options,
     SPREADSHEET_PT_csv_options,
     AddDataFieldOperator,
     RemoveDataFieldOperator,
