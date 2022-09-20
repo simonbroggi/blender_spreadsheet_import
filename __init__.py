@@ -23,7 +23,7 @@ def read_json_data(context, filepath, data_array_name, data_fields, encoding='ut
     # name of the object and mesh
     data_name = "imported_data"
     
-    mesh = bpy.data.meshes.new(name="json_data")
+    mesh = bpy.data.meshes.new(name="json_"+data_array_name)
     mesh.vertices.add(len(data_array))
     #coordinates = np.ones((len(data_array)*3))
     #mesh.vertices.foreach_set("co", coordinates)
@@ -56,13 +56,14 @@ def read_json_data(context, filepath, data_array_name, data_fields, encoding='ut
         mesh.vertices[i].co = (i,0.0,0.0) # set vertex x position according to index
         i=i+1
 
-    #todo: error messages
+    #todo: error messages: key error
     #todo: csv message how many lines got imported imported "imported values from line 6 to line 117"
 
     mesh.update()
     mesh.validate()
-    
-    create_object(mesh, data_array_name)
+
+    object_name = bpy.path.display_name(bpy.path.basename(filepath))
+    create_object(mesh, object_name)
     
     f.close()
     return {'FINISHED'}
@@ -114,7 +115,8 @@ def read_csv_data(context, filepath, data_fields, encoding='latin-1', delimiter=
         mesh.update()
         mesh.validate()
 
-        create_object(mesh, "csv_import")
+        object_name = bpy.path.display_name(bpy.path.basename(filepath))
+        create_object(mesh, object_name)
 
         csv_file.close()
             #print(row['Quartal'], row['Erdgas'])
