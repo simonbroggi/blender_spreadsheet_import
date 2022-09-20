@@ -83,24 +83,35 @@ def read_csv_data(context, filepath, data_fields, leading_liens_to_discard=0):
         csv_reader = csv.DictReader(csv_file, delimiter=';')
 
         i=0
-        for row in csv_reader:
-            print(row)
-            mesh.vertices.add(1)
-            mesh.update() #might be slow, but does it matter?...
-            
-            # make sure it's the right data type
-            for data_field in data_fields:
-                #print(row.keys())
-                value = row[data_field.name]
-                if(data_field.dataType == 'FLOAT'):
-                    value = float(value)
-                elif(data_field.dataType == 'INT'):
-                    value = int(value)
-                elif(data_field.dataType == 'BOOLEAN'):
-                    value = bool(value)
-                mesh.attributes[data_field.name if data_field.name else "empty_key_string"].data[i].value = value
 
-            i = i+1
+        try:
+            for row in csv_reader:
+                print(row)
+
+                
+                # make sure it's the right data type
+                # raises ValueError if the datatype can not be converted 
+                for data_field in data_fields:
+                    value = row[data_field.name]
+                    if(data_field.dataType == 'FLOAT'):
+                        value = float(value)
+                    elif(data_field.dataType == 'INT'):
+                        value = int(value)
+                    elif(data_field.dataType == 'BOOLEAN'):
+                        value = bool(value)
+                    row[data_field.name] = value
+                
+                mesh.vertices.add(1)
+                mesh.update() #might be slow, but does it matter?...
+
+                # assign row values to mesh attribute values
+                for data_field in data_fields:
+                    mesh.attributes[data_field.name if data_field.name else "empty_key_string"].data[i].value = row[data_field.name]
+
+                mesh.vertices[i].co = (i,0.0,0.0) # set vertex x position according to index
+                i = i+1
+        except ValueError:
+            print("value error on line {line_number}".format(line_number=discarded_leading_lines + i + 1))
 
         mesh.update()
         mesh.validate()
