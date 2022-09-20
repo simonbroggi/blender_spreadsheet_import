@@ -84,8 +84,7 @@ def read_csv_data(context, filepath, data_fields, encoding='latin-1', delimiter=
     add_data_fields(mesh, data_fields)
     
     with open(filepath, 'r', encoding=encoding, newline='') as csv_file:
-
-        print("importing {file} without the first {lines}".format(file=filepath, lines=leading_liens_to_discard))
+        #print("importing {file} without the first {lines}".format(file=filepath, lines=leading_liens_to_discard))
         discarded_leading_lines = 0
         while(discarded_leading_lines < leading_liens_to_discard):
             line = csv_file.readline()
