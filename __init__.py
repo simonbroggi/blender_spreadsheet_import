@@ -67,10 +67,6 @@ def read_json_data(context, filepath, data_array_name, data_fields):
     return {'FINISHED'}
 
 def read_csv_data(context, filepath, data_fields, leading_liens_to_discard=0):
-    print('todo: import csv')
-    #todo: import the same way as JSON: rely on user to name fields and data types
-    
-
     mesh = bpy.data.meshes.new(name="csv_data")
 
     add_data_fields(mesh, data_fields)
@@ -83,16 +79,18 @@ def read_csv_data(context, filepath, data_fields, leading_liens_to_discard=0):
             line = csv_file.readline()
             #print("discarded line " + discarded_leading_lines + ": " + line)
             discarded_leading_lines = discarded_leading_lines + 1
-        csv_reader = csv.DictReader(csv_file)
+
+        csv_reader = csv.DictReader(csv_file, delimiter=';')
 
         i=0
         for row in csv_reader:
+            print(row)
             mesh.vertices.add(1)
             mesh.update() #might be slow, but does it matter?...
             
             # make sure it's the right data type
             for data_field in data_fields:
-                print(row.keys())
+                #print(row.keys())
                 value = row[data_field.name]
                 if(data_field.dataType == 'FLOAT'):
                     value = float(value)
@@ -102,7 +100,7 @@ def read_csv_data(context, filepath, data_fields, leading_liens_to_discard=0):
                     value = bool(value)
                 mesh.attributes[data_field.name if data_field.name else "empty_key_string"].data[i].value = value
 
-                i = i+1
+            i = i+1
 
         mesh.update()
         mesh.validate()
@@ -173,6 +171,9 @@ class DataFieldPropertiesGroup(bpy.types.PropertyGroup):
         default='FLOAT',
     )
 
+#todo: add presets
+# https://sinestesia.co/blog/tutorials/using-blenders-presets-in-python/
+
 # ImportHelper is a helper class, defines filename and invoke() function which calls the file selector.
 class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
     """Import data to Spreadsheet"""
@@ -198,6 +199,8 @@ class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
         options={'HIDDEN'},
     )
 
+    #todo: add property to specify file encoding 
+
     data_fields: bpy.props.CollectionProperty(
         type=DataFieldPropertiesGroup,
         name="Field names",
@@ -211,6 +214,10 @@ class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
         default=0,
         options={'HIDDEN'},
     )
+
+    #todo: add property to specify leading lines to discard
+    #todo: add property to specify footer line
+    #todo: add property to specify csv_delimiter
 
     def execute(self, context):
         if(self.filepath.endswith('.json')):
