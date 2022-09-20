@@ -13,9 +13,9 @@ from bpy_extras.io_utils import ImportHelper
 import json
 import csv
 
-def read_json_data(context, filepath, data_array_name, data_fields):
+def read_json_data(context, filepath, data_array_name, data_fields, encoding='utf-8-sig'):
     #print("importing data from json...")
-    f = open(filepath, 'r', encoding='utf-8-sig')
+    f = open(filepath, 'r', encoding=encoding)
     data = json.load(f)
     
     data_array = data[data_array_name] 
@@ -56,7 +56,8 @@ def read_json_data(context, filepath, data_array_name, data_fields):
         mesh.vertices[i].co = (i,0.0,0.0) # set vertex x position according to index
         i=i+1
 
-    #todo: nicer error messages
+    #todo: error messages
+    #todo: csv message how many lines got imported imported "imported values from line 6 to line 117"
 
     mesh.update()
     mesh.validate()
@@ -66,38 +67,49 @@ def read_json_data(context, filepath, data_array_name, data_fields):
     f.close()
     return {'FINISHED'}
 
-def read_csv_data(context, filepath, data_fields):
-    print('todo: import csv')
-    #todo: import the same way as JSON: rely on user to name fields and data types
-    
-
+def read_csv_data(context, filepath, data_fields, encoding='latin-1', delimiter=",", leading_liens_to_discard=0):
     mesh = bpy.data.meshes.new(name="csv_data")
 
     add_data_fields(mesh, data_fields)
     
-    with open(filepath, 'r', newline='') as csv_file:
+    with open(filepath, 'r', encoding=encoding, newline='') as csv_file:
 
-        print("importing " + csv_file.name)
-        csv_reader = csv.DictReader(csv_file)
+        print("importing {file} without the first {lines}".format(file=filepath, lines=leading_liens_to_discard))
+        discarded_leading_lines = 0
+        while(discarded_leading_lines < leading_liens_to_discard):
+            line = csv_file.readline()
+            #print("discarded line " + discarded_leading_lines + ": " + line)
+            discarded_leading_lines = discarded_leading_lines + 1
+
+        csv_reader = csv.DictReader(csv_file, delimiter=delimiter)
 
         i=0
-        for row in csv_reader:
-            mesh.vertices.add(1)
-            mesh.update() #might be slow, but does it matter?...
-            
-            # make sure it's the right data type
-            for data_field in data_fields:
-                value = row[data_field.name]
-                if(data_field.dataType == 'FLOAT'):
-                    value = float(value)
-                elif(data_field.dataType == 'INT'):
-                    value = int(value)
-                elif(data_field.dataType == 'BOOLEAN'):
-                    value = bool(value)
-                
-                mesh.attributes[data_field.name if data_field.name else "empty_key_string"].data[i].value = value
 
+        try:
+            for row in csv_reader:
+                # make sure it's the right data type
+                # raises ValueError if the datatype can not be converted 
+                for data_field in data_fields:
+                    value = row[data_field.name]
+                    if(data_field.dataType == 'FLOAT'):
+                        value = float(value)
+                    elif(data_field.dataType == 'INT'):
+                        value = int(value)
+                    elif(data_field.dataType == 'BOOLEAN'):
+                        value = bool(value)
+                    row[data_field.name] = value
+                
+                mesh.vertices.add(1)
+                mesh.update() #might be slow, but does it matter?...
+
+                # assign row values to mesh attribute values
+                for data_field in data_fields:
+                    mesh.attributes[data_field.name if data_field.name else "empty_key_string"].data[i].value = row[data_field.name]
+
+                mesh.vertices[i].co = (i,0.0,0.0) # set vertex x position according to index
                 i = i+1
+        except ValueError:
+            print("value error on line {line_number}".format(line_number=discarded_leading_lines + i + 1))
 
         mesh.update()
         mesh.validate()
@@ -105,15 +117,11 @@ def read_csv_data(context, filepath, data_fields):
         create_object(mesh, "csv_import")
 
         csv_file.close()
-
-    return {'FINISHED'}
-
             #print(row['Quartal'], row['Erdgas'])
     # https://www.youtube.com/watch?v=wEj7cfwL6RY
     # https://docs.python.org/3/library/csv.html
 
-
-    return {'FINISHED'}
+    return {'FINISHED'}    
 
 def add_data_fields(mesh, data_fields):
     # add custom data
@@ -168,11 +176,14 @@ class DataFieldPropertiesGroup(bpy.types.PropertyGroup):
         default='FLOAT',
     )
 
+#todo: add presets
+# https://sinestesia.co/blog/tutorials/using-blenders-presets-in-python/
+
 # ImportHelper is a helper class, defines filename and invoke() function which calls the file selector.
 class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
     """Import data to Spreadsheet"""
     bl_idname = "import.spreadsheet"  # important since its how bpy.ops.import.spreadsheet is constructed
-    bl_label = "Import Spreadsheet Data"
+    bl_label = "Import Spreadsheet"
 
     # ImportHelper mixin class uses this
     # filename_ext = ".json;.csv"
@@ -184,13 +195,6 @@ class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
         default="*.json;*.csv",
         options={'HIDDEN'},
         maxlen=255,  # Max internal buffer length, longer would be clamped.
-    )
-
-    array_name: bpy.props.StringProperty(
-        name="Array name",
-        description="The name of the array to import",
-        default="",
-        options={'HIDDEN'},
     )
 
     data_fields: bpy.props.CollectionProperty(
@@ -207,11 +211,52 @@ class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
         options={'HIDDEN'},
     )
 
+    array_name: bpy.props.StringProperty(
+        name="Array name",
+        description="The name of the array to import",
+        default="",
+        options={'HIDDEN'},
+    )
+    
+    json_encoding: bpy.props.StringProperty(
+        name="Encoding",
+        description="Encoding of the JSON File",
+        default="utf-8-sig",
+        options={'HIDDEN'},
+    )
+
+    csv_delimiter: bpy.props.StringProperty(
+        name="Delimiter",
+        description="A one-character string used to separate fields.",
+        default=",",
+        maxlen=1,
+        options={'HIDDEN'},
+    )
+
+    csv_leading_lines_to_discard: bpy.props.IntProperty(
+        name="Discard leading lines",
+        description="Leading lines to discard",
+        default=0,
+        min=0,
+        options={'HIDDEN'},
+    )
+
+    csv_encoding: bpy.props.StringProperty(
+        name="Encoding",
+        description="Encoding of the CSV File",
+        default="latin-1",
+        options={'HIDDEN'},
+    )
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label(text="Import Spreadsheet Options")
+
     def execute(self, context):
         if(self.filepath.endswith('.json')):
-            return read_json_data(context, self.filepath, self.array_name, self.data_fields)
+            return read_json_data(context, self.filepath, self.array_name, self.data_fields, self.json_encoding)
         elif(self.filepath.endswith('.csv')):
-            return read_csv_data(context, self.filepath, self.data_fields)
+            return read_csv_data(context, self.filepath, self.data_fields, self.csv_encoding, self.csv_delimiter, self.csv_leading_lines_to_discard)
 
 class AddDataFieldOperator(bpy.types.Operator):
     bl_idname = "import.spreadsheet_field_add"
@@ -238,10 +283,10 @@ class RemoveDataFieldOperator(bpy.types.Operator):
         operator.active_data_field_index = min(max(0,index - 1), len(operator.data_fields)-1)
         return {'FINISHED'}
 
-class SPREADSHEET_PT_array_name(bpy.types.Panel):
+class SPREADSHEET_PT_json_options(bpy.types.Panel):
     bl_space_type = 'FILE_BROWSER'
     bl_region_type = 'TOOL_PROPS'
-    bl_label = "Array Name"
+    bl_label = "JSON Import Options"
     bl_parent_id = "FILE_PT_operator"
 
     @classmethod
@@ -254,8 +299,28 @@ class SPREADSHEET_PT_array_name(bpy.types.Panel):
         sfile = context.space_data
         operator = sfile.active_operator
         layout = self.layout
-        #(data=item, property="name", text="")
         layout.prop(data=operator, property="array_name")
+        layout.prop(data=operator, property="json_encoding")
+
+class SPREADSHEET_PT_csv_options(bpy.types.Panel):
+    bl_space_type = 'FILE_BROWSER'
+    bl_region_type = 'TOOL_PROPS'
+    bl_label = "CSV Import Options"
+    bl_parent_id = "FILE_PT_operator"
+
+    @classmethod
+    def poll(cls, context):
+        sfile = context.space_data
+        operator = sfile.active_operator
+        return operator.bl_idname == "IMPORT_OT_spreadsheet" and operator.filepath.lower().endswith('.csv')
+
+    def draw(self, context):
+        sfile = context.space_data
+        operator = sfile.active_operator
+        layout = self.layout
+        layout.prop(data=operator, property="csv_delimiter")
+        layout.prop(data=operator, property="csv_leading_lines_to_discard")
+        layout.prop(data=operator, property="csv_encoding")
 
 class SPREADSHEET_PT_field_names(bpy.types.Panel):
     bl_space_type = 'FILE_BROWSER'
@@ -295,15 +360,16 @@ blender_classes = [
     SPREADSHEET_UL_data_fields,
     DataFieldPropertiesGroup,
     ImportSpreadsheetData,
-    SPREADSHEET_PT_array_name,
     SPREADSHEET_PT_field_names,
+    SPREADSHEET_PT_json_options,
+    SPREADSHEET_PT_csv_options,
     AddDataFieldOperator,
     RemoveDataFieldOperator,
 ]
 
 # Only needed if you want to add into a dynamic menu
 def menu_func_import(self, context):
-    self.layout.operator(ImportSpreadsheetData.bl_idname, text="Spreadsheet Import Operator")
+    self.layout.operator(ImportSpreadsheetData.bl_idname, text="Spreadsheet Import (.csv, .json)")
 
 # Register and add to the "file selector" menu (required to use F3 search "Text Import Operator" for quick access)
 def register():
