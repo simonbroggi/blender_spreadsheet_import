@@ -57,7 +57,7 @@ def read_json_data(context, filepath, data_array_name, data_fields, encoding='ut
 
             mesh.attributes[data_field.name if data_field.name else "empty_key_string"].data[i].value = value
 
-        mesh.vertices[i].co = (i,0.0,0.0) # set vertex x position according to index
+        mesh.vertices[i].co = (0.01 * i,0.0,0.0) # set vertex x position according to index
         i=i+1
 
     f.close()
@@ -117,7 +117,7 @@ def read_csv_data(context, filepath, data_fields, encoding='latin-1', delimiter=
                 for data_field in data_fields:
                     mesh.attributes[data_field.name if data_field.name else "empty_key_string"].data[i].value = row[data_field.name]
 
-                mesh.vertices[i].co = (i,0.0,0.0) # set vertex x position according to index
+                mesh.vertices[i].co = (0.01 * i,0.0,0.0) # set vertex x position according to index
                 i = i+1
         except ValueError as e:
             error_message = repr(e)
