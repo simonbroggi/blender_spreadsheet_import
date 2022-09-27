@@ -54,6 +54,8 @@ def read_json_data(context, filepath, data_array_name, data_fields, encoding='ut
                 value = int(value)
             elif(data_field.dataType == 'BOOLEAN'):
                 value = bool(value)
+            elif(data_field.dataType == 'STRING'):
+                value = str(value)
 
             mesh.attributes[data_field.name if data_field.name else "empty_key_string"].data[i].value = value
 
@@ -107,6 +109,8 @@ def read_csv_data(context, filepath, data_fields, encoding='latin-1', delimiter=
                         value = int(value)
                     elif(data_field.dataType == 'BOOLEAN'):
                         value = bool(value)
+                    elif(data_field.dataType == 'STRING'):
+                        value = str(value)
                     row[data_field.name] = value
                 
                 mesh.vertices.add(1)
@@ -194,7 +198,7 @@ class DataFieldPropertiesGroup(bpy.types.PropertyGroup):
             ('FLOAT', "Float", "Floating-point value"),
             ('INT', "Integer", "32-bit integer"),
             ('BOOLEAN', "Boolean", "True or false"),
-            # ('STRING', "String", "Text string"), # string wont work
+            ('STRING', "String", "Text string"),
         ),
         default='FLOAT',
     )
