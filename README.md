@@ -7,11 +7,12 @@ The data can then be processed with geometry nodes to be visualized.
 ## Content
 * [Installation](#installation)
 * [Usage](#usage)
+* [Example Node Setup](#example-node-setup)
+* * [Sample a single value](#sample-a-single-value)
+* * [Bar Chart](#bar-chart)
 * [Example Import Settings](#example-import-settings)
 * * [CSV](#sample-csv-import-settings)
 * * [JSON](#sample-import-settings-for-json)
-* [Example Node Setup](#example-node-setup)
-* * [Bar Chart](#bar-chart)
 
 
 ## Installation
@@ -29,9 +30,33 @@ The data can then be processed with geometry nodes to be visualized.
 5. When importing JSON, specify the array name where the data is in your JSON File. It must be in the root JSON object, and it must contain an array.
 6. When importing CSV, check if the delimiter is correct
 7. When importing CSV with lines before the header row, discard these by setting the Discard leading lines value
+8. Press the Import Spreadsheet button in the bottom right. The Importer will create a new Object named after the imported file. The Object wil have Mesh Data attached to it called csv_data or json_data depending on the imported file type.
+9. Check the Spreadsheet viewer in Blender to see if the data has been imported correctly.  
+
+![](documentation_images/imported_csv_example.png)  
+
+## Example Node Setup
+
+To use the imported data in any geometry nodes tree, add an Object Info node and select the object containing the imported data in the object field.  
+  
+If later you want to replace the data, you can do this in the object data properties of the selected object: Link another mesh data block to the object, and the values will update. If used column names still exist in the newly linked data block, everything should update as expected.
+
+
+### Sample a single value
+
+![](documentation_images/sample_value_example.png)  
+
+### Bar chart
+A single float value named "field_name" is used to scale some cubes.  
+The Domain Size node is used to find the amounts of bars needed (the size of the imported dataset), and a duplicate of the bar geometry is created for each row of data. The duplicates are then ofset along the X axis according to the duplicate index, and scaled along the Z axis according to the data sampled from the "field_name" comumn where the row matches the duplicate index.  
+
+![](documentation_images/nodes_bar_chart.png)  
+
+![](documentation_images/bar_chart.png)  
 
 
 ## Example import settings
+
 ### Sample CSV Import settings
 
 ![](documentation_images/import_options_csv_example.png)   
@@ -64,7 +89,7 @@ Sample CSV Data:
 
 The imported Data viewed in the spreadsheet editor:  
 
-![](documentation_images/imported_csv_example.png)
+![](documentation_images/imported_csv_example.png)  
 
 ### Sample import settings for JSON  
 
@@ -214,16 +239,4 @@ Similar JSON Data
 
 Importing the above JSON file will produce this spreadsheet:  
 ![](documentation_images/imported_json_example.png)  
-
-
-## Example Node Setup
-
-### Bar chart
-A single float value named "Speicherwasser" is used to scale some cubes:    
-
-![](documentation_images/nodes_bar_chart.png)  
-
-![](documentation_images/nodes_float_value_and_normalized.png)  
-
-![](documentation_images/bar_chart.png)  
 
