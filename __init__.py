@@ -276,9 +276,9 @@ class ImportSpreadsheetData(bpy.types.Operator, ImportHelper):
         layout.label(text="Import Spreadsheet Options")
 
     def execute(self, context):
-        if(self.filepath.endswith('.json')):
+        if(self.filepath.lower().endswith('.json')):
             report_message, report_type = read_json_data(context, self.filepath, self.array_name, self.data_fields, self.json_encoding)
-        elif(self.filepath.endswith('.csv')):
+        elif(self.filepath.lower().endswith('.csv')):
             report_message, report_type = read_csv_data(context, self.filepath, self.data_fields, self.csv_encoding, self.csv_delimiter, self.csv_leading_lines_to_discard)
         
         self.report({report_type}, report_message)
