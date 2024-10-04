@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Spreadsheet Data Importer",
     "author": "Simon Broggi",
-    "version": (0, 2, 0),
+    "version": (0, 3, 0),
     "blender": (3, 3, 0),
     "location": "File > Import-Export",
     "description": "Import data to spreadsheet for use with geometry nodes",

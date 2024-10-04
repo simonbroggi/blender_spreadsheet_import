@@ -2,11 +2,11 @@ schema_version = "1.0.0"
 
 id = "blender_spreadsheet_import"
 name = "Spreadsheet Data Importer"
-version = "0.2.0"
+version = "0.3.0"
 tagline = "Import data to spreadsheet for use with geometry nodes"
 type = "add-on"
 blender_version_min = "3.3.0"
-maintainer = "Simon Broggi <email@address.com>"
+maintainer = "Simon Broggi <simon.broggi@insert-coin.ch>"
 tags = ["Import-Export"]
 license = [
   "SPDX:GPL-3.0-or-later",
