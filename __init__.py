@@ -1,13 +1,3 @@
-bl_info = {
-    "name": "Spreadsheet Data Importer",
-    "author": "Simon Broggi",
-    "version": (0, 3, 0),
-    "blender": (3, 3, 0),
-    "location": "File > Import-Export",
-    "description": "Import data to spreadsheet for use with geometry nodes",
-    "category": "Import-Export",
-}
-
 import bpy
 from bpy_extras.io_utils import ImportHelper
 import json
