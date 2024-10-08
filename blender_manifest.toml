@@ -2,12 +2,13 @@ schema_version = "1.0.0"
 
 id = "blender_spreadsheet_import"
 name = "Spreadsheet Data Importer"
-version = "0.3.0"
+version = "0.3.2"
 tagline = "Import data to spreadsheet for use with geometry nodes"
 type = "add-on"
 blender_version_min = "4.2.0"
 maintainer = "Simon Broggi <simon.broggi@insert-coin.ch>"
-tags = ["Import-Export"]
+tags = ["Import-Export", "Geometry Nodes"]
 license = [
   "SPDX:GPL-3.0-or-later",
 ]
+files = "Load CSV and JSON files from disk"
