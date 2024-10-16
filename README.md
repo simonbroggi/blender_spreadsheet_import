@@ -2,7 +2,7 @@
 
 A blender add-on to import CSV or JSON data into blender spreadsheet.  
 The data can then be processed with geometry nodes to be visualized.  
-
+For Blender 4.2 and newer, use [Blender Extensions](https://extensions.blender.org/add-ons/spreadsheet-import/) to get this add-on!
 
 ## Content
 * [Installation](#installation)
@@ -16,6 +16,10 @@ The data can then be processed with geometry nodes to be visualized.
 
 
 ## Installation
+
+For Blender 4.2 and newer, please install via [Blender Extensions](https://extensions.blender.org/add-ons/spreadsheet-import/)!
+
+For older Blender Versions:
 1. Download the [latest released zip file](https://github.com/simonbroggi/blender_spreadsheet_import/releases/latest/download/blender_spreadsheet_importer.zip)
 2. Do **not** unzip the file.
 3. Install the file directly in Blender's preferences window: `Edit / Preferences / Install..`
